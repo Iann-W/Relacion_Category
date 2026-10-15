@@ -1,21 +1,31 @@
 package com.example.demointelig.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
 public class Product {
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-
     private Long id;
     private String name;
-    private Long price;
+    private Double price;
     private int stock;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
+
+    public Product() {
+    }
+
+    public Product(Long id, String name, Double price, int stock, Category category) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        this.category = category;
+    }
 
     public Long getId() {
         return id;
@@ -33,11 +43,11 @@ public class Product {
         this.name = name;
     }
 
-    public Long getPrice() {
+    public Double getPrice() {
         return price;
     }
 
-    public void setPrice(Long price) {
+    public void setPrice(Double price) {
         this.price = price;
     }
 
@@ -49,13 +59,11 @@ public class Product {
         this.stock = stock;
     }
 
-    public Product() {
+    public Category getCategory() {
+        return category;
     }
 
-    public Product(Long id, String name, Long price, int stock) {
-        this.id = id;
-        this.name = name;
-        this.price = price;
-        this.stock = stock;
+    public void setCategory(Category category) {
+        this.category = category;
     }
 }
