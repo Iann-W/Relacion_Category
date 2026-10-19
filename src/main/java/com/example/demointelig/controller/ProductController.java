@@ -49,7 +49,11 @@ public class ProductController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ProductResponse> update(@PathVariable Long id, @Valid @RequestBody ProductRequest productUpdated) {
-        Optional<Product> product = service.update(id, toEntity(productUpdated));
+        Optional<Product> product = service.update
+                (id,
+                        toEntity(productUpdated),
+                        productUpdated.categoryId()
+                );
         if (product.isPresent()) {
             return ResponseEntity.ok(toResponse(product.get()));
         }

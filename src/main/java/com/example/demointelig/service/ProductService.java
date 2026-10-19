@@ -1,5 +1,6 @@
 package com.example.demointelig.service;
 
+import com.example.demointelig.exeption.ResourceNotFoundException;
 import com.example.demointelig.model.Category;
 import com.example.demointelig.model.Product;
 import com.example.demointelig.repository.CategoryRepository;
@@ -29,29 +30,44 @@ public class ProductService {
     }
 
     public Product save(Product product, Long categoryId) {
-        Category category = repoCategory.findById(categoryId)
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con el ID: " + categoryId));
+        Category category = repoCategory.
+                findById(categoryId).
+                orElseThrow(
+                        () ->
+                                new ResourceNotFoundException("Category not found with id: "+categoryId));
 
         product.setCategory(category);
         return repo.save(product);
     }
 
-    public Optional<Product> update(Long id, Product newProduct) {
-        Optional<Product> optional = repo.findById(id);
-        if (optional.isEmpty()) {
-            return Optional.empty();
-        }
+    public Optional<Product> update(Long id, Product newProduct, Long categoryId) {
 
-        Product productBd = optional.get();
-        productBd.setName(newProduct.getName());
-        productBd.setPrice(newProduct.getPrice());
+
+
+        Product productBd = repo.findById(id).orElseThrow(
+                ()->
+                        new ResourceNotFoundException("Product not Found" +
+                                " with id " +id)
+        );
+        /*if (optional.isEmpty()) {
+            return Optional.empty();
+        }*/
+
+        Category category = repoCategory.findById(categoryId).orElseThrow(
+                ()->
+                        new ResourceNotFoundException("Category not found with id"+categoryId)
+        );
+
+        //Product productBd = optional.get();
+        productBd.setName(newProduct.getName()+"");
+        productBd.setPrice((double)newProduct.getPrice());
         productBd.setStock(newProduct.getStock());
+        productBd.setCategory(category);
 
         // Si el objeto nuevo trae una categoría asociada, actualízala también
-        if (newProduct.getCategory() != null) {
+        /*if (newProduct.getCategory() != null) {
             productBd.setCategory(newProduct.getCategory());
-        }
-
+        }*/
         return Optional.of(repo.save(productBd));
     }
 
