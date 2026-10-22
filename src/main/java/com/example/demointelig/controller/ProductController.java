@@ -1,5 +1,6 @@
 package com.example.demointelig.controller;
 
+import com.example.demointelig.dto.DiscountRequest;
 import com.example.demointelig.dto.ProductRequest;
 import com.example.demointelig.dto.ProductResponse;
 import com.example.demointelig.model.Product;
@@ -8,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,11 +36,12 @@ public class ProductController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponse> findById(@PathVariable Long id) {
-        Optional<Product> product = service.findById(id);
-        if (product.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(toResponse(product.get()));
+        Product product = service.findById(id).orElseThrow(
+                ()->
+                        new ResourceAccessException("Producto no encontrado" +id)
+        );
+
+        return ResponseEntity.ok(toResponse(product));
     }
 
     @PostMapping
@@ -49,15 +52,12 @@ public class ProductController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ProductResponse> update(@PathVariable Long id, @Valid @RequestBody ProductRequest productUpdated) {
-        Optional<Product> product = service.update
+        Product product = service.update
                 (id,
                         toEntity(productUpdated),
                         productUpdated.categoryId()
                 );
-        if (product.isPresent()) {
-            return ResponseEntity.ok(toResponse(product.get()));
-        }
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(toResponse(product));
     }
 
     @DeleteMapping("/{id}")
@@ -68,6 +68,16 @@ public class ProductController {
         }
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/discount")
+    public ResponseEntity<ProductResponse> applyDiscount(
+            @PathVariable Long id,
+            @Valid @RequestBody DiscountRequest request
+    ) {
+        Product updatedProduct = service.applyDiscount(id, request.percentage());
+        return ResponseEntity.ok(toResponse(updatedProduct));
+    }
+
 
     private ProductResponse toResponse(Product product) {
         String categoryName = product.getCategory() != null ? product.getCategory().getName() : null;

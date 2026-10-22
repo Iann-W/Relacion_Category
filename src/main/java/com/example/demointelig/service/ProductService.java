@@ -1,6 +1,7 @@
 package com.example.demointelig.service;
 
 import com.example.demointelig.exeption.ResourceNotFoundException;
+import com.example.demointelig.exeption.StockConflictException;
 import com.example.demointelig.model.Category;
 import com.example.demointelig.model.Product;
 import com.example.demointelig.repository.CategoryRepository;
@@ -40,7 +41,7 @@ public class ProductService {
         return repo.save(product);
     }
 
-    public Optional<Product> update(Long id, Product newProduct, Long categoryId) {
+    public Product update(Long id, Product newProduct, Long categoryId) {
 
 
 
@@ -68,7 +69,7 @@ public class ProductService {
         /*if (newProduct.getCategory() != null) {
             productBd.setCategory(newProduct.getCategory());
         }*/
-        return Optional.of(repo.save(productBd));
+        return repo.save(productBd);
     }
 
     public boolean delete(Long id) {
@@ -77,5 +78,22 @@ public class ProductService {
         }
         repo.deleteById(id);
         return true;
+    }
+
+    public Product applyDiscount(Long id, Double percentage) {
+        // 1. Buscar el producto (Si no existe -> lanza ResourceNotFoundException -> 404)
+        Product product = repo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not Found with id " + id));
+
+        // 2. Validar stock (Si es 0 -> lanza StockConflictException -> 409)
+        if (product.getStock() <= 0) {
+            throw new StockConflictException("No se permite aplicar un descuento si el producto tiene stock 0");
+        }
+
+        // 3. Aplicar descuento y guardar
+        Double newPrice = product.getPrice() * (1 - (percentage / 100.0));
+        product.setPrice(newPrice);
+
+        return repo.save(product);
     }
 }
